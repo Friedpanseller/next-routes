@@ -3,95 +3,32 @@ import { defaultNextRoutesOptions } from './config';
 import NextRoutesPlugin from './next-plugin';
 import { NextRoutesOptions } from './types';
 
-/**
- * A powerful plugin for Next.js that ensures your application's links are always valid.
- * It generates routes and utilities for your application, making link management a breeze.
- *
- * @example
- * // Basic Setup
- * // If you are using the `src` directory you can simply wrap your config with `withRoutes`
- * import withRoutes from '@triyanox/next-routes';
- *
- * const config = withRoutes({
- *   //... your next config
- * });
- *
- * export default config;
- *
- * // Advanced Setup
- * // if you are not using the `src` directory you can override the default options
- * import withRoutes from '@triyanox/next-routes';
- * import path from 'path';
- * import { cwd } from 'process';
- *
- * const config = withRoutes(
- *   {
- *     //... your next config
- *   },
- *   {
- *     appDir: path.resolve(cwd(), './app'),
- *     declarationPath: path.resolve(
- *       cwd(),
- *       './node_modules/@types/next-routes/index.d.ts',
- *     ),
- *     utilsPath: path.resolve(cwd(), './lib/link.ts'),
- *   },
- * );
- *
- * export default config;
- *
- * // Usage in components
- * import link$ from '@/lib';
- * import Link from 'next/link';
- *
- * const MyComponent = () => {
- *   return (
- *     <Link
- *       href={link$({
- *           path: '/blog/[slug]',
- *           params: {
- *             slug: 'post-id',
- *           },
- *           hash: 'my-hash',
- *           query: {
- *             foo: 'bar',
- *           },
- *       })}
- *     >
- *       Post
- *     </Link>
- *   );
- * };
- *
- * @see {@link https://github.com/triyanox/next-routes | GitHub Repository}
- */
-const WithNextRoutes = (
+const withNextRoutes = (
   nextConfig: NextConfig,
   nextRoutesOptions?: Partial<NextRoutesOptions>,
-) => {
+): NextConfig => {
   return {
     ...nextConfig,
     webpack: (config, options) => {
-      const { appDir, declarationPath, utilsPath } = {
+      const mergedOptions = {
         ...defaultNextRoutesOptions,
         ...nextRoutesOptions,
       };
-      config.plugins = config.plugins ?? [];
+
       if (options.isServer) {
+        config.plugins = config.plugins || [];
         config.plugins.push(
-          new NextRoutesPlugin(config, options, {
-            appDir,
-            declarationPath,
-            utilsPath,
-          }),
+          new NextRoutesPlugin(config, options, mergedOptions),
         );
       }
-      if (nextConfig.webpack) {
+
+      if (typeof nextConfig.webpack === 'function') {
         return nextConfig.webpack(config, options);
       }
+
       return config;
     },
-  } as NextConfig;
+  };
 };
 
-export default WithNextRoutes;
+export default withNextRoutes;

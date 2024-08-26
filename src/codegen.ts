@@ -2,28 +2,40 @@ import fs from 'fs/promises';
 import { getRoutesMap } from './utils';
 
 const getRoutesDeclaration = async (appDir: string) => {
-  const routes_map = await getRoutesMap(appDir);
-  return `const routes = ${JSON.stringify(routes_map, null, 2)};
+  const routesMap = await getRoutesMap(appDir);
+  return `const routes = ${JSON.stringify(routesMap, null, 2)};
 declare type RoutesOutput = typeof routes;`;
 };
 
 const getLinkFunction = async (appDir: string) => {
-  const routes_map = await getRoutesMap(appDir);
-  return `export const routes = ${JSON.stringify(routes_map, null, 2)};
+  const routesMap = await getRoutesMap(appDir);
+  return `
+import { ParsedUrlQueryInput } from 'querystring';
+
+export const routes = ${JSON.stringify(routesMap, null, 2)};
+
 type IsEmptyObject<T> = keyof T extends never ? true : false;
 
 type Link$Options<T extends keyof RoutesOutput = keyof RoutesOutput> =
   IsEmptyObject<RoutesOutput[T]["params"]> extends false
     ? {
         href: T;
-        params: RoutesOutput[T]["params"];
-        query?: Record<string, string | number | boolean>;
+        params: {
+          [K in keyof RoutesOutput[T]["params"]]: RoutesOutput[T]["params"][K] extends any[]
+            ? string[]
+            : string
+        };
+        query?: ParsedUrlQueryInput;
         hash?: string;
       }
     : {
         href: T;
-        params?: RoutesOutput[T]["params"];
-        query?: Record<string, string | number | boolean>;
+        params?: {
+          [K in keyof RoutesOutput[T]["params"]]: RoutesOutput[T]["params"][K] extends any[]
+            ? string[]
+            : string
+        };
+        query?: ParsedUrlQueryInput;
         hash?: string;
       };
 
@@ -34,27 +46,30 @@ const link$ = <T extends keyof RoutesOutput = keyof RoutesOutput>({
   params,
   query,
   hash,
-}: Link$Options<T>) => {
+}: Link$Options<T>): string => {
   const route = routes[href];
   let path = route.path;
 
   if (route.isDynamic) {
-    const params_keys = Object.keys(params!);
-    const params_values = Object.values(params!);
-    path = params_keys.reduce((acc, key, index) => {
-      return acc.replace(${'`[${key}]`, params_values[index] as string'});
+    const paramsKeys = Object.keys(params!);
+    const paramsValues = Object.values(params!);
+    path = paramsKeys.reduce((acc, key, index) => {
+      return acc.replace(\`[\${key}]\`, paramsValues[index] as string);
     }, route.path);
   }
 
+  if (route.isCatchAll || route.isOptionalCatchAll) {
+   const catchAllParam = Object.values(params!)[0] as string | string[];
+path = path.replace(/\\[\\.{3}.+\\]/, Array.isArray(catchAllParam) ? catchAllParam.join('/') : catchAllParam);
+  }
+
   if (query) {
-    const queryString = new URLSearchParams(
-      query as Record<string, string>,
-    ).toString();
-    path += ${'`?${queryString}`'};
+    const queryString = new URLSearchParams(query as Record<string, string>).toString();
+    path += \`?\${queryString}\`;
   }
 
   if (hash) {
-    path += ${'`#${hash}`'};
+    path += \`#\${hash}\`;
   }
 
   return path;
@@ -67,17 +82,17 @@ const writeFile = async (path: string, data: string) => {
   await fs.writeFile(path, data);
 };
 
-const __gen_declarations__ = async (
+const generateDeclarations = async (
   appDir: string,
   declarationPath: string,
 ) => {
-  const routes_declaration_file = await getRoutesDeclaration(appDir);
-  await writeFile(declarationPath, routes_declaration_file);
+  const routesDeclarationFile = await getRoutesDeclaration(appDir);
+  await writeFile(declarationPath, routesDeclarationFile);
 };
 
-const __gen_link$__ = async (appDir: string, utilsPath: string) => {
-  const link_function_file = await getLinkFunction(appDir);
-  await writeFile(utilsPath, link_function_file);
+const generateLinkFunction = async (appDir: string, utilsPath: string) => {
+  const linkFunctionFile = await getLinkFunction(appDir);
+  await writeFile(utilsPath, linkFunctionFile);
 };
 
-export { __gen_declarations__, __gen_link$__ };
+export { generateDeclarations, generateLinkFunction };

@@ -1,15 +1,19 @@
-type IFSTreeWalker = {
+type FSTreeWalker = {
   base: string;
-  paths: IFSTreeWalker[];
+  paths: FSTreeWalker[];
 };
 
-type IRoute<
+type Route<
   T extends string = string,
-  P extends { [key: string]: string } = { [key: string]: string },
+  P extends { [key: string]: string | string[] } = {
+    [key: string]: string | string[];
+  },
 > = {
   path: T;
   params: P;
   isDynamic: boolean;
+  isCatchAll: boolean;
+  isOptionalCatchAll: boolean;
 };
 
 type NextRoutesOptions = {
@@ -18,4 +22,4 @@ type NextRoutesOptions = {
   utilsPath: string;
 };
 
-export type { IFSTreeWalker, IRoute, NextRoutesOptions };
+export type { FSTreeWalker, Route, NextRoutesOptions };
