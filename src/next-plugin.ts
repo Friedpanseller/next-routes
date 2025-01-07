@@ -6,9 +6,9 @@ import {
   WebpackConfigContext,
 } from 'next/dist/server/config-shared';
 import type { WebpackPluginInstance } from 'webpack';
-import { __gen_declarations__, __gen_link$__ } from './codegen';
-import { __types_dir__ } from './config';
+import { TYPES_DIR } from './config';
 import { NextRoutesOptions } from './types';
+import { generateDeclarations, generateLinkFunction } from './codegen';
 
 const createDirectoryIfNotExists = (dir: string) => {
   if (!fs.existsSync(dir)) {
@@ -20,7 +20,7 @@ const createDirectoryIfNotExists = (dir: string) => {
 const getDirectoryFromPath = (filePath: string) =>
   filePath.split('/').slice(0, -1).join('/');
 
-class NextRoutesPlugin implements WebpackPluginInstance {
+export default class NextRoutesPlugin implements WebpackPluginInstance {
   name = 'NextRoutesPlugin';
   private changedFiles = new Set<string>();
   private regenerateTimeout?: NodeJS.Timeout;
@@ -34,16 +34,16 @@ class NextRoutesPlugin implements WebpackPluginInstance {
   async generateRoutes() {
     const { appDir, declarationPath, utilsPath } = this.nextRoutesOptions;
     console.log(chalk.cyanBright(`🚀 Generating routes...`));
-    createDirectoryIfNotExists(__types_dir__);
+    createDirectoryIfNotExists(TYPES_DIR);
     createDirectoryIfNotExists(getDirectoryFromPath(utilsPath));
     await this.emitDeclarationFile(appDir, declarationPath);
-    await __gen_link$__(appDir, utilsPath);
+    await generateLinkFunction(appDir, utilsPath);
     this.watchForChanges(appDir, declarationPath, utilsPath);
   }
 
   async emitDeclarationFile(appDir: string, declarationPath: string) {
     console.log(chalk.cyanBright(`📦 Emitting declaration file...`));
-    await __gen_declarations__(appDir, declarationPath);
+    await generateDeclarations(appDir, declarationPath);
     console.log(chalk.greenBright(`📦 Declaration file emitted!`));
   }
 
@@ -66,10 +66,9 @@ class NextRoutesPlugin implements WebpackPluginInstance {
           );
         }
       });
-      this.setupExitHandlers(watcher);
+      this.setupExitHandlers(watcher as unknown as fs.FSWatcher);
     }
   }
-
   scheduleRegenerateRoutes(
     path: string,
     appDir: string,
@@ -94,7 +93,7 @@ class NextRoutesPlugin implements WebpackPluginInstance {
       ),
     );
     await this.emitDeclarationFile(appDir, declarationPath);
-    await __gen_link$__(appDir, utilsPath);
+    await generateLinkFunction(appDir, utilsPath);
     this.changedFiles.clear();
   }
 
@@ -116,5 +115,3 @@ class NextRoutesPlugin implements WebpackPluginInstance {
     });
   }
 }
-
-export default NextRoutesPlugin;

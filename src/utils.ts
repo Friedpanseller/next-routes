@@ -1,10 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { __app_dir__, __valid_page_extensions__ } from './config';
-import { IFSTreeWalker, IRoute } from './types';
+import { APP_DIR, VALID_PAGE_EXTENTIONS } from './config';
+import { FSTreeWalker, Route } from './types';
 
-const cleanPath = (path: string, appDir: string = __app_dir__): string => {
-  return path
+const cleanPath = (filePath: string, appDir: string = APP_DIR): string => {
+  return filePath
     .replace(appDir, '')
     .replace(/\(.*\)/g, '')
     .replace(/\/$/, '')
@@ -14,11 +14,12 @@ const cleanPath = (path: string, appDir: string = __app_dir__): string => {
     .replace(/\/{2,}/g, '/');
 };
 
-const isValidPath = (p: string) => !p.startsWith('_') && !p.startsWith('.');
+const isValidPath = (p: string): boolean =>
+  !p.startsWith('_') && !p.startsWith('.');
 
-const walk = async (dir: string): Promise<IFSTreeWalker> => {
+const walk = async (dir: string): Promise<FSTreeWalker> => {
   const paths = await fs.readdir(dir);
-  const tree: IFSTreeWalker = {
+  const tree: FSTreeWalker = {
     base: dir,
     paths: [],
   };
@@ -38,29 +39,41 @@ const walk = async (dir: string): Promise<IFSTreeWalker> => {
   return tree;
 };
 
-const isDynamicPath = (base: string) =>
+const isDynamicPath = (base: string): boolean =>
   base.includes('[') && base.includes(']');
+const isCatchAllRoute = (base: string): boolean => base.includes('[...');
+const isOptionalCatchAllRoute = (base: string): boolean =>
+  base.includes('[[...');
 
-const generateRoutes = async (appDir: string): Promise<IRoute[]> => {
+const generateRoutes = async (appDir: string): Promise<Route[]> => {
   const tree = await walk(appDir);
-  const routes: IRoute[] = [];
+  const routes: Route[] = [];
 
-  const traverse = (tree: IFSTreeWalker) => {
+  const traverse = (tree: FSTreeWalker) => {
     for (const path of tree.paths) {
       const { base } = path;
       const isDynamic = isDynamicPath(base);
-      const params = isDynamic
-        ? Object.fromEntries(
-            base
-              .match(/\[(.*?)\]/g)!
-              .map((param) => param.replace(/\[|\]/g, ''))
-              .map((param) => [param, '']),
-          )
-        : {};
+      const isCatchAll = isCatchAllRoute(base);
+      const isOptionalCatchAll = isOptionalCatchAllRoute(base);
+
+      let params: Record<string, string | string[]> = {};
+      if (isDynamic) {
+        const paramMatches = base.match(/\[(.*?)\]/g);
+        if (paramMatches) {
+          params = Object.fromEntries(
+            paramMatches.map((param) => {
+              const key = param.replace(/\[|\]/g, '');
+              return [key, key.startsWith('...') ? [] : ''];
+            }),
+          );
+        }
+      }
 
       routes.push({
         path: base,
         isDynamic,
+        isCatchAll,
+        isOptionalCatchAll,
         params,
       });
 
@@ -70,13 +83,13 @@ const generateRoutes = async (appDir: string): Promise<IRoute[]> => {
 
   traverse(tree);
 
-  const routes_generated = routes
+  return routes
     .filter((route) => {
-      const { path } = route;
-      const name = path.split('/').pop();
+      const { path: routePath } = route;
+      const name = routePath.split('/').pop();
       const ext = name?.split('.').pop();
       return (
-        __valid_page_extensions__.includes('.' + ext!) &&
+        VALID_PAGE_EXTENTIONS.includes('.' + ext!) &&
         name!.split('.').shift() === 'page'
       );
     })
@@ -89,19 +102,13 @@ const generateRoutes = async (appDir: string): Promise<IRoute[]> => {
       ...route,
       path: route.path === '/' ? route.path : route.path.replace(/\/$/, ''),
     }));
-
-  routes_generated.push({
-    path: '/',
-    params: {},
-    isDynamic: false,
-  });
-
-  return routes_generated;
 };
 
-const getRoutesMap = async (appDir: string) => {
+const getRoutesMap = async (appDir: string): Promise<Record<string, Route>> => {
   const routes = await generateRoutes(appDir);
   return Object.fromEntries(routes.map((route) => [route.path, route]));
 };
 
 export { cleanPath, generateRoutes, getRoutesMap, walk };
+export type { FSTreeWalker };
+export { isValidPath, isDynamicPath, isCatchAllRoute, isOptionalCatchAllRoute };

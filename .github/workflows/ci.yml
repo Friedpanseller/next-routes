@@ -8,25 +8,27 @@ on:
 
 jobs:
   test:
-    name: Test Node.js ${{ matrix.node-version }} on ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-        node-version: [18.x]
-
-    runs-on: ${{ matrix.os }}
+    name: Test and Lint
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: pnpm/action-setup@v2.2.2
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
         with:
-          version: 6.34.0
-      - uses: actions/setup-node@v2
+          version: 8
+      - uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18
           cache: 'pnpm'
+      
       - name: Install Dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
+      
       - name: Run Linter
         run: pnpm lint
+      
+      - name: Run Tests
+        run: pnpm test
+      
+      - name: Build
+        run: pnpm build

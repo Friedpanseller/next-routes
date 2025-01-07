@@ -23,9 +23,12 @@
     "format": "prettier --write .",
     "lint": "eslint --ext .ts,.tsx src",
     "build": "tsup src/index.ts --dts",
+    "release": "pnpm run build && changeset publish",
     "changeset": "changeset",
-    "release": "pnpm build && changeset publish",
-    "version": "changeset version"
+    "version": "changeset version",
+     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "exports": {
     ".": {
@@ -40,14 +43,17 @@
   "type": "module",
   "devDependencies": {
     "@changesets/cli": "^2.27.1",
+    "@types/jest": "^29.5.12",
     "@types/webpack": "^5.28.5",
     "@typescript-eslint/eslint-plugin": "^6.18.1",
     "@typescript-eslint/parser": "^6.18.1",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.2",
+    "jest": "^29.7.0",
     "next": "^14.0.4",
     "prettier": "^3.1.1",
+    "ts-jest": "^29.2.5",
     "tsup": "^8.0.1",
     "typescript": "^5.3.3"
   },
