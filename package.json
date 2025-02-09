@@ -1,5 +1,5 @@
 {
-  "name": "@triyanox/next-routes",
+  "name": "@friedpanseller/next-routes",
   "description": "You will never have broken links in your Next.js app again",
   "version": "0.1.5",
   "publishConfig": {
@@ -7,17 +7,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/triyanox/next-routes.git"
+    "url": "https://github.com/friedpanseller/next-routes.git"
   },
   "bugs": {
-    "url": "https://github.com/triyanox/next-routes/issues"
+    "url": "https://github.com/friedpanseller/next-routes/issues"
   },
-  "homepage": "https://github.com/triyanox/next-routes",
+  "homepage": "https://github.com/friedpanseller/next-routes",
   "main": "dist/index.js",
   "author": {
-    "name": "Mohamed Achaq",
-    "email": "hi@achaq.dev",
-    "url": "https://achaq.dev"
+    "name": "Friedpanseller"
   },
   "scripts": {
     "format": "prettier --write .",
@@ -26,7 +24,7 @@
     "release": "pnpm run build && changeset publish",
     "changeset": "changeset",
     "version": "changeset version",
-     "test": "jest",
+    "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
   },
