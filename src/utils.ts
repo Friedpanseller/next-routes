@@ -4,14 +4,18 @@ import { APP_DIR, VALID_PAGE_EXTENTIONS } from './config';
 import { FSTreeWalker, Route } from './types';
 
 const cleanPath = (filePath: string, appDir: string = APP_DIR): string => {
+  const sep = path.sep.replace(/\\/g, '\\\\'); // Escape for Windows paths
+  const regex = (pattern: string) => new RegExp(pattern.replaceAll('/', sep), 'g');
+
   return filePath
-    .replace(appDir, '')
-    .replace(/\(.*\)/g, '')
-    .replace(/\/$/, '')
-    .replace(/^\/\//, '/')
-    .replace(/\.[a-z]+$/, '')
-    .replace(/\/page$/, '')
-    .replace(/\/{2,}/g, '/');
+    .replace(appDir, '') // Remove base app directory
+    .replace(/\(.*\)/g, '') // Remove parentheses
+    .replace(regex('/$'), '') // Remove trailing slash
+    .replace(regex('^//'), '/') // Normalize double leading slashes
+    .replace(/\.[a-z]+$/, '') // Remove file extensions
+    .replace(regex('/page$'), '') // Remove '/page' at the end
+    .replace(regex('/route$'), '') // Remove '/route' at the end
+    .replace(regex('/{2,}'), '/'); // Collapse multiple slashes
 };
 
 const isValidPath = (p: string): boolean =>
@@ -86,11 +90,11 @@ const generateRoutes = async (appDir: string): Promise<Route[]> => {
   return routes
     .filter((route) => {
       const { path: routePath } = route;
-      const name = routePath.split('/').pop();
+      const name = routePath.split(path.sep).pop();
       const ext = name?.split('.').pop();
       return (
         VALID_PAGE_EXTENTIONS.includes('.' + ext!) &&
-        name!.split('.').shift() === 'page'
+        (name!.split('.').shift() === 'page' || name!.split('.').shift() === 'route')
       );
     })
     .map((route) => ({
@@ -100,7 +104,7 @@ const generateRoutes = async (appDir: string): Promise<Route[]> => {
     .filter((route) => route.path !== '')
     .map((route) => ({
       ...route,
-      path: route.path === '/' ? route.path : route.path.replace(/\/$/, ''),
+      path: route.path === path.sep ? route.path : route.path.replace(new RegExp(`${path.sep}$`), ''),
     }));
 };
 
@@ -109,6 +113,6 @@ const getRoutesMap = async (appDir: string): Promise<Record<string, Route>> => {
   return Object.fromEntries(routes.map((route) => [route.path, route]));
 };
 
-export { cleanPath, generateRoutes, getRoutesMap, walk };
+export { cleanPath, generateRoutes, getRoutesMap, isCatchAllRoute, isDynamicPath, isOptionalCatchAllRoute, isValidPath, walk };
 export type { FSTreeWalker };
-export { isValidPath, isDynamicPath, isCatchAllRoute, isOptionalCatchAllRoute };
+

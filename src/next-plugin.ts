@@ -5,10 +5,11 @@ import {
   NextJsWebpackConfig,
   WebpackConfigContext,
 } from 'next/dist/server/config-shared';
+import path from 'path';
 import type { WebpackPluginInstance } from 'webpack';
+import { generateDeclarations, generateLinkFunction } from './codegen';
 import { TYPES_DIR } from './config';
 import { NextRoutesOptions } from './types';
-import { generateDeclarations, generateLinkFunction } from './codegen';
 
 const createDirectoryIfNotExists = (dir: string) => {
   if (!fs.existsSync(dir)) {
@@ -18,7 +19,7 @@ const createDirectoryIfNotExists = (dir: string) => {
 };
 
 const getDirectoryFromPath = (filePath: string) =>
-  filePath.split('/').slice(0, -1).join('/');
+  filePath.split(path.sep).slice(0, -1).join(path.sep);
 
 export default class NextRoutesPlugin implements WebpackPluginInstance {
   name = 'NextRoutesPlugin';
@@ -29,7 +30,7 @@ export default class NextRoutesPlugin implements WebpackPluginInstance {
     private config: NextJsWebpackConfig,
     private readonly options: WebpackConfigContext,
     private nextRoutesOptions: NextRoutesOptions,
-  ) {}
+  ) { }
 
   async generateRoutes() {
     const { appDir, declarationPath, utilsPath } = this.nextRoutesOptions;
