@@ -4,8 +4,8 @@ import { APP_DIR, VALID_PAGE_EXTENTIONS } from './config';
 import { FSTreeWalker, Route } from './types';
 
 const cleanPath = (filePath: string, appDir: string = APP_DIR): string => {
-  // const sep = path.sep.replace(/\\/g, '\\\\'); // Escape for Windows paths
-  const regex = (pattern: string) => new RegExp(pattern, 'g');
+  const sep = path.sep.replace(/\\/g, '\\\\'); // Escape for Windows paths
+  const regex = (pattern: string) => new RegExp(pattern.replaceAll('/', sep), 'g');
 
   return filePath
     .replace(appDir, '') // Remove base app directory
@@ -73,9 +73,8 @@ const generateRoutes = async (appDir: string): Promise<Route[]> => {
         }
       }
 
-      // Replace NTFS backslashes with URL forwardslashes
       routes.push({
-        path: base.replace(/\\/, "/"),
+        path: base,
         isDynamic,
         isCatchAll,
         isOptionalCatchAll,
@@ -100,7 +99,8 @@ const generateRoutes = async (appDir: string): Promise<Route[]> => {
     })
     .map((route) => ({
       ...route,
-      path: cleanPath(route.path, appDir),
+      // Replace NTFS backslashes with URL forwardslashes
+      path: cleanPath(route.path, appDir).replace(/\\/g, "/"),
     }))
     .filter((route) => route.path !== '')
     .map((route) => ({
