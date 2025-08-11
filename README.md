@@ -1,6 +1,6 @@
-# `@triyanox/next-routes` - Never worry about broken links in your Next.js app again!
+# `@friedpanseller/next-routes` forked from `@triyanox/next-routes` - Never worry about broken links in your Next.js app again!
 
-`@triyanox/next-routes` is a powerful plugin for Next.js that ensures your application's links are always valid. It generates routes and utilities for your application, making link management a breeze.
+`next-routes` is a powerful plugin for Next.js that ensures your application's links are always valid. It generates routes and utilities for your application, making link management a breeze.
 
 ## Roadmap
 
@@ -16,20 +16,20 @@
 
 ## Installation
 
-Install `@triyanox/next-routes` using your favorite package manager:
+Install `@friedpanseller/next-routes` using your favorite package manager:
 
 ```bash
 # pnpm
-pnpm add @triyanox/next-routes
+pnpm add @friedpanseller/next-routes
 
 # bun
-bun add @triyanox/next-routes
+bun add @friedpanseller/next-routes
 
 # npm
-npm i @triyanox/next-routes
+npm i @friedpanseller/next-routes
 
 # yarn
-yarn add @triyanox/next-routes
+yarn add @friedpanseller/next-routes
 ```
 
 ## Usage
@@ -39,7 +39,7 @@ yarn add @triyanox/next-routes
 1. In your `next.config.js` file, add the following:
 
 ```js
-import withRoutes from '@triyanox/next-routes';
+import withRoutes from '@friedpanseller/next-routes';
 // if you are using the `src` directory you can just
 // wrap your config object with `withRoutes`
 
@@ -80,10 +80,10 @@ const MyComponent = () => {
 
 ### Advanced Setup
 
-You can customize the behavior of `@triyanox/next-routes` by passing an options object to the `withRoutes` function. Here's an example:
+You can customize the behavior of `@friedpanseller/next-routes` by passing an options object to the `withRoutes` function. Here's an example:
 
 ```js
-import withRoutes from '@triyanox/next-routes';
+import withRoutes from '@friedpanseller/next-routes';
 import path from 'path';
 import { cwd } from 'process';
 
@@ -105,7 +105,7 @@ const config = withRoutes(
 export default config;
 ```
 
-In this example, the appDir, declarationPath, and utilsPath options are used to customize the behavior of `@triyanox/next-routes`.
+In this example, the appDir, declarationPath, and utilsPath options are used to customize the behavior of `@friedpanseller/next-routes`.
 
 ### Contributing
 

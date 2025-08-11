@@ -9,7 +9,7 @@ const cleanPath = (filePath: string, appDir: string = APP_DIR): string => {
 
   return filePath
     .replace(appDir, '') // Remove base app directory
-    .replace(/\(.*\)/g, '') // Remove parentheses
+    .replace(/\(.*?\)/g, '') // Remove parentheses
     .replace(regex('/$'), '') // Remove trailing slash
     .replace(regex('^//'), '/') // Normalize double leading slashes
     .replace(/\.[a-z]+$/, '') // Remove file extensions
