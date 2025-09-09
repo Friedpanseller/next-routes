@@ -100,7 +100,7 @@ const generateRoutes = async (appDir: string): Promise<Route[]> => {
     .map((route) => ({
       ...route,
       // Replace NTFS backslashes with URL forwardslashes
-      path: cleanPath(route.path, appDir).replace(/\\/g, "/"),
+      path: cleanPath(route.path, appDir).replace(/\\+/g, "/").replace(/\/+/g, "/"),
     }))
     .filter((route) => route.path !== '')
     .map((route) => ({
